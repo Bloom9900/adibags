@@ -37,10 +37,13 @@ local BACKPACK_CONTAINER = _G.BACKPACK_CONTAINER or ( Enum.BagIndex and Enum.Bag
 local REAGENTBAG_CONTAINER = ( Enum.BagIndex and Enum.BagIndex.REAGENTBAG_CONTAINER ) or 5
 local BANK_CONTAINER = _G.BANK_CONTAINER or ( Enum.BagIndex and Enum.BagIndex.Bank ) or -1
 local REAGENTBANK_CONTAINER = _G.REAGENTBANK_CONTAINER or ( Enum.BagIndex and Enum.BagIndex.Reagentbank ) or -3
-local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS
-local NUM_REAGENTBAG_SLOTS = _G.NUM_REAGENTBAG_SLOTS
-local NUM_TOTAL_EQUIPPED_BAG_SLOTS = _G.NUM_TOTAL_EQUIPPED_BAG_SLOTS
-local NUM_BANKBAGSLOTS = _G.NUM_BANKBAGSLOTS
+-- Use sane fallbacks when running on clients where these globals are not
+-- defined.  This prevents runtime errors when the game API does not expose
+-- the constants (for instance on older or specialized client builds).
+local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS or 4
+local NUM_REAGENTBAG_SLOTS = _G.NUM_REAGENTBAG_SLOTS or 0
+local NUM_TOTAL_EQUIPPED_BAG_SLOTS = _G.NUM_TOTAL_EQUIPPED_BAG_SLOTS or (NUM_BAG_SLOTS + NUM_REAGENTBAG_SLOTS)
+local NUM_BANKBAGSLOTS = _G.NUM_BANKBAGSLOTS or 0
 local TRADE_GOODS = _G.Enum.ItemClass.Tradegoods
 local GetItemSubClassInfo = _G.C_Item.GetItemSubClassInfo
 local pairs = _G.pairs
