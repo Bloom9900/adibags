@@ -31,10 +31,12 @@ local REAGENTBAG_CONTAINER = ( Enum.BagIndex and Enum.BagIndex.REAGENTBAG_CONTAI
 local ContainerFrame_GenerateFrame = _G.ContainerFrame_GenerateFrame
 local ContainerFrame_GetOpenFrame = _G.ContainerFrame_GetOpenFrame
 local GetContainerNumSlots = C_Container and _G.C_Container.GetContainerNumSlots or _G.GetContainerNumSlots
-local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS
-local NUM_REAGENTBAG_SLOTS = _G.NUM_REAGENTBAG_SLOTS
-local NUM_TOTAL_EQUIPPED_BAG_SLOTS = _G.NUM_TOTAL_EQUIPPED_BAG_SLOTS
-local NUM_BANKBAGSLOTS = _G.NUM_BANKBAGSLOTS
+-- Provide fallbacks when global constants are missing to avoid arithmetic on
+-- nil values on clients with a reduced API surface.
+local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS or 4
+local NUM_REAGENTBAG_SLOTS = _G.NUM_REAGENTBAG_SLOTS or 0
+local NUM_TOTAL_EQUIPPED_BAG_SLOTS = _G.NUM_TOTAL_EQUIPPED_BAG_SLOTS or (NUM_BAG_SLOTS + NUM_REAGENTBAG_SLOTS)
+local NUM_BANKBAGSLOTS = _G.NUM_BANKBAGSLOTS or 0
 local NUM_CONTAINER_FRAMES = _G.NUM_CONTAINER_FRAMES
 local pairs = _G.pairs
 --GLOBALS>
