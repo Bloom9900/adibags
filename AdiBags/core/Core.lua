@@ -111,16 +111,36 @@ function addon:OnInitialize()
 		C_CVar.SetCVar("professionAccessorySlotsExampleShown", 1)
 	end
 
-  self:Deprecation()
-	self:Debug('Initialized')
+self:Deprecation()
+self:Debug('Initialized')
+end
+
+local updatedBags = {}
+local updatedBank = { [BANK_CONTAINER] = true }
+local updatedReagentBank = {}
+if addon.isRetail then
+        updatedReagentBank = { [REAGENTBANK_CONTAINER] = true }
+end
+
+local function BagUpdate(event, bag)
+        updatedBags[bag] = true
+        if addon.isRetail or addon.isWrath or addon.isCata then
+                addon:SendMessage('AdiBags_BagUpdated', updatedBags)
+                wipe(updatedBags)
+        end
+end
+
+local function BagUpdateDelayed(event)
+        addon:SendMessage('AdiBags_BagUpdated', updatedBags)
+        wipe(updatedBags)
 end
 
 function addon:OnEnable()
 
-	self.globalLock = false
+        self.globalLock = false
 
-	self:RegisterEvent('BAG_UPDATE')
-	self:RegisterEvent('BAG_UPDATE_DELAYED')
+        self:RegisterEvent('BAG_UPDATE', BagUpdate)
+        self:RegisterEvent('BAG_UPDATE_DELAYED', BagUpdateDelayed)
 	self:RegisterBucketEvent('PLAYERBANKSLOTS_CHANGED', 0.01, 'BankUpdated')
 	if addon.isRetail then
 		self:RegisterBucketEvent('PLAYERREAGENTBANKSLOTS_CHANGED', 0.01, 'ReagentBankUpdated')
@@ -332,27 +352,6 @@ end
 --------------------------------------------------------------------------------
 -- Event handlers
 --------------------------------------------------------------------------------
-
-local updatedBags = {}
-local updatedBank = { [BANK_CONTAINER] = true }
-local updatedReagentBank = {}
-if addon.isRetail then
-	updatedReagentBank = { [REAGENTBANK_CONTAINER] = true }
-end
-
-function addon:BAG_UPDATE(event, bag)
-	updatedBags[bag] = true
-	if addon.isRetail or addon.isWrath or addon.isCata then
-		self:SendMessage('AdiBags_BagUpdated', updatedBags)
-		wipe(updatedBags)
-	end
-end
-
-function addon:BAG_UPDATE_DELAYED(event)
-	self:SendMessage('AdiBags_BagUpdated', updatedBags)
-	wipe(updatedBags)
-end
-
 function addon:BankUpdated(slots)
 	-- Wrap several PLAYERBANKSLOTS_CHANGED into one AdiBags_BagUpdated message
 	for slot in pairs(slots) do
