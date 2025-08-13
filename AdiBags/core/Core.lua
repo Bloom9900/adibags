@@ -123,16 +123,18 @@ if addon.isRetail then
         updatedReagentBank = { [REAGENTBANK_CONTAINER] = true }
 end
 
-local function BagUpdate(event, bag)
+---Handle BAG_UPDATE events and throttle updates.
+function addon:BagUpdate(event, bag)
         updatedBags[bag] = true
         if addon.isRetail or addon.isWrath or addon.isCata then
-                addon:SendMessage('AdiBags_BagUpdated', updatedBags)
+                self:SendMessage('AdiBags_BagUpdated', updatedBags)
                 wipe(updatedBags)
         end
 end
 
-local function BagUpdateDelayed(event)
-        addon:SendMessage('AdiBags_BagUpdated', updatedBags)
+---Dispatch batched BAG_UPDATE events.
+function addon:BagUpdateDelayed(event)
+        self:SendMessage('AdiBags_BagUpdated', updatedBags)
         wipe(updatedBags)
 end
 
@@ -140,8 +142,8 @@ function addon:OnEnable()
 
         self.globalLock = false
 
-        self:RegisterEvent('BAG_UPDATE', BagUpdate)
-        self:RegisterEvent('BAG_UPDATE_DELAYED', BagUpdateDelayed)
+        self:RegisterEvent('BAG_UPDATE', 'BagUpdate')
+        self:RegisterEvent('BAG_UPDATE_DELAYED', 'BagUpdateDelayed')
 	self:RegisterBucketEvent('PLAYERBANKSLOTS_CHANGED', 0.01, 'BankUpdated')
 	if addon.isRetail then
 		self:RegisterBucketEvent('PLAYERREAGENTBANKSLOTS_CHANGED', 0.01, 'ReagentBankUpdated')
@@ -330,25 +332,27 @@ do
         -- Create the Blizzard addon option frame
         local panel = CreateFrame("Frame", addonName.."BlizzOptions")
         panel.name = addonName
-        if Settings then
+        if Settings and Settings.RegisterAddOnCategory and Settings.RegisterCanvasLayoutCategory then
                 Settings.RegisterAddOnCategory(Settings.RegisterCanvasLayoutCategory(panel, addonName))
-
-                local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-                fs:SetPoint("TOPLEFT", 10, -15)
-                fs:SetPoint("BOTTOMRIGHT", panel, "TOPRIGHT", 10, -45)
-                fs:SetJustifyH("LEFT")
-                fs:SetJustifyV("TOP")
-                fs:SetText(addonName)
-
-                local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-                button:SetText(L['Configure'])
-                button:SetWidth(128)
-                button:SetPoint("TOPLEFT", 10, -48)
-                button:SetScript('OnClick', function()
-                        while CloseWindows() do end
-                        return addon:OpenOptions()
-                end)
+        elseif type(_G.InterfaceOptions_AddCategory) == "function" then
+                _G.InterfaceOptions_AddCategory(panel)
         end
+
+        local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        fs:SetPoint("TOPLEFT", 10, -15)
+        fs:SetPoint("BOTTOMRIGHT", panel, "TOPRIGHT", 10, -45)
+        fs:SetJustifyH("LEFT")
+        fs:SetJustifyV("TOP")
+        fs:SetText(addonName)
+
+        local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+        button:SetText(L['Configure'])
+        button:SetWidth(128)
+        button:SetPoint("TOPLEFT", 10, -48)
+        button:SetScript('OnClick', function()
+                while CloseWindows() do end
+                return addon:OpenOptions()
+        end)
 end
 
 --------------------------------------------------------------------------------
