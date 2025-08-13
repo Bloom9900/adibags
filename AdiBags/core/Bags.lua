@@ -155,15 +155,60 @@ local function CompareBags(a, b)
 end
 
 function addon:NewBag(name, order, isBank, ...)
-	self:Debug('NewBag', name, order, isBank, ...)
-	local bag = addon:NewModule(name, bagProto, 'ABEvent-1.0', ...)
-	bag.bagName = name
-	bag.bagIds = addon.BAG_IDS[isBank and "BANK" or "BAGS"]
-	bag.isBank = isBank
-	bag.order = order
-	tinsert(bags, bag)
-	tsort(bags, CompareBags)
-	return bag
+       self:Debug('NewBag', name, order, isBank, ...)
+       local bag = addon:NewModule(name, bagProto, 'ABEvent-1.0', ...)
+       bag.bagName = name
+
+       if not addon.BAG_IDS then
+               local BACKPACK_CONTAINER = _G.BACKPACK_CONTAINER or (_G.Enum.BagIndex and _G.Enum.BagIndex.Backpack) or 0
+               local REAGENTBAG_CONTAINER = (_G.Enum.BagIndex and _G.Enum.BagIndex.REAGENTBAG_CONTAINER) or 5
+               local BANK_CONTAINER = _G.BANK_CONTAINER or (_G.Enum.BagIndex and _G.Enum.BagIndex.Bank) or -1
+               local REAGENTBANK_CONTAINER = _G.REAGENTBANK_CONTAINER or (_G.Enum.BagIndex and _G.Enum.BagIndex.Reagentbank) or -3
+               local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS or 4
+               local NUM_REAGENTBAG_SLOTS = _G.NUM_REAGENTBAG_SLOTS or 0
+               local NUM_TOTAL_EQUIPPED_BAG_SLOTS = _G.NUM_TOTAL_EQUIPPED_BAG_SLOTS or (NUM_BAG_SLOTS + NUM_REAGENTBAG_SLOTS)
+               local NUM_BANKBAGSLOTS = _G.NUM_BANKBAGSLOTS or 0
+
+               local BAGS = { [BACKPACK_CONTAINER] = BACKPACK_CONTAINER }
+               local BANK = {}
+               local BANK_ONLY = {}
+               local REAGENTBANK_ONLY = {}
+
+               if addon.isRetail then
+                       for i = 1, NUM_TOTAL_EQUIPPED_BAG_SLOTS do BAGS[i] = i end
+                       BANK_ONLY = { [BANK_CONTAINER] = BANK_CONTAINER }
+                       for i = NUM_TOTAL_EQUIPPED_BAG_SLOTS + 1, NUM_TOTAL_EQUIPPED_BAG_SLOTS + NUM_BANKBAGSLOTS do BANK_ONLY[i] = i end
+                       REAGENTBANK_ONLY = { [REAGENTBANK_CONTAINER] = REAGENTBANK_CONTAINER }
+                       for _, bags in ipairs { BANK_ONLY, REAGENTBANK_ONLY } do
+                               for id in pairs(bags) do BANK[id] = id end
+                       end
+               else
+                       for i = 1, NUM_BAG_SLOTS do BAGS[i] = i end
+                       BANK = { [BANK_CONTAINER] = BANK_CONTAINER }
+                       for i = NUM_BAG_SLOTS + 1, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS do BANK[i] = i end
+                       BANK_ONLY = BANK
+               end
+
+               local ALL = {}
+               for _, bags in ipairs { BAGS, BANK } do
+                       for id in pairs(bags) do ALL[id] = id end
+               end
+
+               addon.BAG_IDS = {
+                       BAGS = BAGS,
+                       BANK = BANK,
+                       BANK_ONLY = BANK_ONLY,
+                       REAGENTBANK_ONLY = REAGENTBANK_ONLY,
+                       ALL = ALL,
+               }
+       end
+
+       bag.bagIds = addon.BAG_IDS[isBank and "BANK" or "BAGS"]
+       bag.isBank = isBank
+       bag.order = order
+       tinsert(bags, bag)
+       tsort(bags, CompareBags)
+       return bag
 end
 
 do
