@@ -30,6 +30,7 @@ local _G = _G
 local ADDON_LOAD_FAILED = _G.ADDON_LOAD_FAILED
 local BANK_CONTAINER = _G.BANK_CONTAINER or ( Enum.BagIndex and Enum.BagIndex.Bank ) or -1
 local REAGENTBAG_CONTAINER = ( Enum.BagIndex and Enum.BagIndex.REAGENTBAG_CONTAINER ) or 5
+local REAGENTBANK_CONTAINER = _G.REAGENTBANK_CONTAINER or ( Enum.BagIndex and Enum.BagIndex.Reagentbank ) or -3
 local CloseWindows = _G.CloseWindows
 local CreateFrame = _G.CreateFrame
 local format = _G.format
@@ -72,10 +73,10 @@ function addon:OnInitialize()
 		self.DEFAULT_SETTINGS.profile.theme[name].sectionFont = self:GetFontDefaults(GameFontNormalLeft)
 	end
 
-	self.db = LibStub('AceDB-3.0'):New(addonName.."DB", self.DEFAULT_SETTINGS, true)
-	self.db.RegisterCallback(self, "OnProfileChanged", "OnProfileChanged")
-	self.db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged")
-	self.db.RegisterCallback(self, "OnProfileReset", "Reconfigure")
+        self.db = LibStub('AceDB-3.0'):New(addonName.."DB", self.DEFAULT_SETTINGS, true)
+        self.db:RegisterCallback(self, "OnProfileChanged", "OnProfileChanged")
+        self.db:RegisterCallback(self, "OnProfileCopied", "OnProfileChanged")
+        self.db:RegisterCallback(self, "OnProfileReset", "Reconfigure")
 
 	self:UpgradeProfile()
 
@@ -96,9 +97,9 @@ function addon:OnInitialize()
 
 	self:SetEnabledState(false)
 
-	-- Persistant handlers
-	self.RegisterBucketMessage(addonName, 'AdiBags_ConfigChanged', 0.2, function(...) addon:ConfigChanged(...) end)
-	self.RegisterEvent(addonName, 'PLAYER_ENTERING_WORLD', function() if self.db.profile.enabled then self:Enable() end end)
+        -- Persistant handlers
+        self:RegisterBucketMessage('AdiBags_ConfigChanged', 0.2, function(...) addon:ConfigChanged(...) end)
+        self:RegisterEvent('PLAYER_ENTERING_WORLD', function() if self.db.profile.enabled then self:Enable() end end)
 
 	self:RegisterChatCommand("adibags", function(cmd)
 		addon:OpenOptions(strsplit(' ', cmd or ""))
@@ -326,27 +327,28 @@ do
 end
 
 do
-	-- Create the Blizzard addon option frame
-	local panel = CreateFrame("Frame", addonName.."BlizzOptions")
-	panel.name = addonName
-	Settings.RegisterAddOnCategory(Settings.RegisterCanvasLayoutCategory(panel, addonName))
+        -- Create the Blizzard addon option frame
+        local panel = CreateFrame("Frame", addonName.."BlizzOptions")
+        panel.name = addonName
+        if Settings then
+                Settings.RegisterAddOnCategory(Settings.RegisterCanvasLayoutCategory(panel, addonName))
 
-	local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-	fs:SetPoint("TOPLEFT", 10, -15)
-	fs:SetPoint("BOTTOMRIGHT", panel, "TOPRIGHT", 10, -45)
-	fs:SetJustifyH("LEFT")
-	fs:SetJustifyV("TOP")
-	fs:SetText(addonName)
+                local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+                fs:SetPoint("TOPLEFT", 10, -15)
+                fs:SetPoint("BOTTOMRIGHT", panel, "TOPRIGHT", 10, -45)
+                fs:SetJustifyH("LEFT")
+                fs:SetJustifyV("TOP")
+                fs:SetText(addonName)
 
-	local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-	button:SetText(L['Configure'])
-	button:SetWidth(128)
-	button:SetPoint("TOPLEFT", 10, -48)
-	button:SetScript('OnClick', function()
-		while CloseWindows() do end
-		return addon:OpenOptions()
-	end)
-
+                local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+                button:SetText(L['Configure'])
+                button:SetWidth(128)
+                button:SetPoint("TOPLEFT", 10, -48)
+                button:SetScript('OnClick', function()
+                        while CloseWindows() do end
+                        return addon:OpenOptions()
+                end)
+        end
 end
 
 --------------------------------------------------------------------------------
