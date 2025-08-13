@@ -73,10 +73,10 @@ function addon:OnInitialize()
 		self.DEFAULT_SETTINGS.profile.theme[name].sectionFont = self:GetFontDefaults(GameFontNormalLeft)
 	end
 
-        self.db = LibStub('AceDB-3.0'):New(addonName.."DB", self.DEFAULT_SETTINGS, true)
-        self.db:RegisterCallback(self, "OnProfileChanged", "OnProfileChanged")
-        self.db:RegisterCallback(self, "OnProfileCopied", "OnProfileChanged")
-        self.db:RegisterCallback(self, "OnProfileReset", "Reconfigure")
+       self.db = LibStub('AceDB-3.0'):New(addonName.."DB", self.DEFAULT_SETTINGS, true)
+       self.db.RegisterCallback(self, "OnProfileChanged", "OnProfileChanged")
+       self.db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged")
+       self.db.RegisterCallback(self, "OnProfileReset", "Reconfigure")
 
 	self:UpgradeProfile()
 
