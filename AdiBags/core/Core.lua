@@ -119,8 +119,17 @@ end
 local updatedBags = {}
 local updatedBank = { [BANK_CONTAINER] = true }
 local updatedReagentBank = {}
+local REAGENTBANK_EVENT
 if addon.isRetail then
         updatedReagentBank = { [REAGENTBANK_CONTAINER] = true }
+        local eventFrame = CreateFrame("Frame")
+        if pcall(eventFrame.RegisterEvent, eventFrame, "PLAYERREAGENTBANKSLOTS_CHANGED") then
+                REAGENTBANK_EVENT = "PLAYERREAGENTBANKSLOTS_CHANGED"
+                eventFrame:UnregisterEvent("PLAYERREAGENTBANKSLOTS_CHANGED")
+        elseif pcall(eventFrame.RegisterEvent, eventFrame, "PLAYERREAGENTBANK_CHANGED") then
+                REAGENTBANK_EVENT = "PLAYERREAGENTBANK_CHANGED"
+                eventFrame:UnregisterEvent("PLAYERREAGENTBANK_CHANGED")
+        end
 end
 
 ---Handle BAG_UPDATE events and throttle updates.
@@ -142,12 +151,12 @@ function addon:OnEnable()
 
         self.globalLock = false
 
-        self:RegisterEvent('BAG_UPDATE', 'BagUpdate')
-        self:RegisterEvent('BAG_UPDATE_DELAYED', 'BagUpdateDelayed')
-	self:RegisterBucketEvent('PLAYERBANKSLOTS_CHANGED', 0.01, 'BankUpdated')
-	if addon.isRetail then
-		self:RegisterBucketEvent('PLAYERREAGENTBANKSLOTS_CHANGED', 0.01, 'ReagentBankUpdated')
-	end
+       self:RegisterEvent('BAG_UPDATE', 'BagUpdate')
+       self:RegisterEvent('BAG_UPDATE_DELAYED', 'BagUpdateDelayed')
+       self:RegisterBucketEvent('PLAYERBANKSLOTS_CHANGED', 0.01, 'BankUpdated')
+       if addon.isRetail and REAGENTBANK_EVENT then
+               self:RegisterBucketEvent(REAGENTBANK_EVENT, 0.01, 'ReagentBankUpdated')
+       end
 
 	self:RegisterEvent('PLAYER_LEAVING_WORLD', 'Disable')
 
@@ -368,12 +377,12 @@ function addon:BankUpdated(slots)
 end
 
 function addon:ReagentBankUpdated(slots)
-	-- Wrap several PLAYERREAGANBANKSLOTS_CHANGED into one AdiBags_BagUpdated message
-	for slot in pairs(slots) do
-		if slot > 0 and slot <= 98 then
-			return self:SendMessage('AdiBags_BagUpdated', updatedReagentBank)
-		end
-	end
+       -- Wrap reagent bank change events into one AdiBags_BagUpdated message
+       for slot in pairs(slots) do
+               if slot > 0 and slot <= 98 then
+                       return self:SendMessage('AdiBags_BagUpdated', updatedReagentBank)
+               end
+       end
 end
 
 function addon:ConfigChanged(vars)
